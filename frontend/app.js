@@ -23,7 +23,14 @@ function showAuth() {
 	appShell.classList.remove('authenticated');
 }
 
-if (localStorage.getItem('verdant-session')) showWorkspace();
+function applySessionProfile() {
+	const session = JSON.parse(localStorage.getItem('verdant-session') || '{}');
+	const name = session.name || 'Alex';
+	setText('greeting', `Good morning, ${name}.`);
+	setText('user-avatar', name.trim().charAt(0).toUpperCase() || 'A');
+}
+
+if (localStorage.getItem('verdant-session')) { applySessionProfile(); showWorkspace(); }
 
 document.querySelectorAll('.auth-tab').forEach((tab) => tab.addEventListener('click', () => {
 	authMode = tab.dataset.mode;
@@ -32,6 +39,7 @@ document.querySelectorAll('.auth-tab').forEach((tab) => tab.addEventListener('cl
 	$('auth-subtitle').textContent = authMode === 'signin' ? 'Monitor your plants and keep their care on track.' : 'Start a calmer, more connected way to care for plants.';
 	$('auth-submit').innerHTML = `${authMode === 'signin' ? 'Sign in' : 'Create account'} <span>→</span>`;
 	$('name-field').classList.toggle('hidden-field', authMode === 'signin');
+	$('auth-name').required = authMode === 'signup';
 	$('forgot-link').style.visibility = authMode === 'signin' ? 'visible' : 'hidden';
 	$('auth-message').textContent = '';
 }));
@@ -47,7 +55,9 @@ authForm.addEventListener('submit', (event) => {
 	const password = $('auth-password').value;
 	const message = $('auth-message');
 	if (password.length < 8) { message.textContent = 'Use at least 8 characters for your password.'; return; }
-	localStorage.setItem('verdant-session', JSON.stringify({ email: $('auth-email').value, name: $('auth-name').value || 'Alex' }));
+	const accountName = $('auth-name').value.trim() || $('auth-email').value.split('@')[0] || 'Alex';
+	localStorage.setItem('verdant-session', JSON.stringify({ email: $('auth-email').value, name: accountName }));
+	applySessionProfile();
 	message.className = 'auth-message success';
 	message.textContent = authMode === 'signin' ? 'Signed in. Opening your workspace...' : 'Account created. Opening your workspace...';
 	setTimeout(showWorkspace, 350);
