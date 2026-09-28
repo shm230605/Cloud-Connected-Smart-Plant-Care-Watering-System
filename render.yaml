@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: verdant-plant-care
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: DEVICE_API_KEY
+        sync: false
+      - key: DATABASE_PATH
+        value: /tmp/plantcare.db
