@@ -89,4 +89,4 @@ Keep the same `POST /api/sensors/data` payload and send the `x-api-key` header f
 This demo uses polling and SQLite to remain simple and free. Production evolution includes WebSockets or Firebase realtime listeners, managed database storage, background queues, authentication, push notifications, multi-tenant authorization, and real hardware command acknowledgement.
 
 ## 👨‍💻 Author
-Shresthaa
+Shresthaa Maiti
