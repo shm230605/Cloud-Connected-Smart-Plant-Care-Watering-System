@@ -1,6 +1,55 @@
 const deviceId = 'PLANT-001';
 const $ = (id) => document.getElementById(id);
 let history = [];
+
+const authScreen = $('auth-screen');
+const appShell = $('app-shell');
+const authForm = $('auth-form');
+let authMode = 'signin';
+
+function showWorkspace() {
+	authScreen.style.display = 'none';
+	appShell.classList.add('authenticated');
+}
+
+function showAuth() {
+	authScreen.style.display = 'grid';
+	appShell.classList.remove('authenticated');
+}
+
+if (localStorage.getItem('verdant-session')) showWorkspace();
+
+document.querySelectorAll('.auth-tab').forEach((tab) => tab.addEventListener('click', () => {
+	authMode = tab.dataset.mode;
+	document.querySelectorAll('.auth-tab').forEach((item) => item.classList.toggle('active', item === tab));
+	$('auth-title').textContent = authMode === 'signin' ? 'Sign in to your workspace' : 'Create your workspace';
+	$('auth-subtitle').textContent = authMode === 'signin' ? 'Monitor your plants and keep their care on track.' : 'Start a calmer, more connected way to care for plants.';
+	$('auth-submit').innerHTML = `${authMode === 'signin' ? 'Sign in' : 'Create account'} <span>→</span>`;
+	$('name-field').classList.toggle('hidden-field', authMode === 'signin');
+	$('forgot-link').style.visibility = authMode === 'signin' ? 'visible' : 'hidden';
+	$('auth-message').textContent = '';
+}));
+
+$('password-toggle').addEventListener('click', () => {
+	const password = $('auth-password');
+	password.type = password.type === 'password' ? 'text' : 'password';
+	$('password-toggle').textContent = password.type === 'password' ? 'Show' : 'Hide';
+});
+
+authForm.addEventListener('submit', (event) => {
+	event.preventDefault();
+	const password = $('auth-password').value;
+	const message = $('auth-message');
+	if (password.length < 8) { message.textContent = 'Use at least 8 characters for your password.'; return; }
+	localStorage.setItem('verdant-session', JSON.stringify({ email: $('auth-email').value, name: $('auth-name').value || 'Alex' }));
+	message.className = 'auth-message success';
+	message.textContent = authMode === 'signin' ? 'Signed in. Opening your workspace...' : 'Account created. Opening your workspace...';
+	setTimeout(showWorkspace, 350);
+});
+
+$('forgot-link').addEventListener('click', (event) => { event.preventDefault(); $('auth-message').textContent = 'Password reset is available in the cloud deployment.'; });
+$('logout-button').addEventListener('click', () => { localStorage.removeItem('verdant-session'); showAuth(); });
+
 async function api(path, options = {}) { const response = await fetch(`/api${path}`, { headers: {'Content-Type':'application/json'}, ...options }); if (!response.ok) throw new Error(await response.text()); return response.json(); }
 function setText(id, value) { $(id).textContent = value; }
 function drawChart(points, threshold) { const svgWidth=700, svgHeight=210, pad=8; if (!points.length) return; const values=points.map(p=>p.soil_moisture); const min=0, max=100; const coords=values.map((v,i)=>[(i/(Math.max(values.length-1,1)))*(svgWidth-pad*2)+pad, svgHeight-pad-(v/max)*(svgHeight-pad*2)]); const line=coords.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' '); const area=`${line} L ${coords.at(-1)[0]},${svgHeight} L ${coords[0][0]},${svgHeight} Z`; $('chart-line').setAttribute('d',line); $('chart-area').setAttribute('d',area); }
